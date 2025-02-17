@@ -92,11 +92,146 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 
 
-### Additional Notes on AWS Hosting:
-- For **EC2**, you can choose the instance type based on your project requirements. For light workloads, a `t2.micro` instance may be sufficient, especially if you plan to run only the recommendation model and a Jupyter Notebook.
-- **Security Groups:** Ensure that your security group allows traffic on ports `22` for SSH and `8888` for Jupyter Notebook (if accessing it remotely).
-- If you use **AWS S3**, you can store large datasets without worrying about local disk space on your EC2 instance.
+### Deploying on AWS EC2
+### 1. Launch an EC2 instance:
+
+- Go to the [AWS Management Console](https://console.aws.amazon.com/).
+- Navigate to **EC2** and click on **Launch Instance**.
+- Select an appropriate instance type (e.g., `t2.micro` for testing).
+- Configure your instance settings, including selecting a **key pair** that you can use for SSH access.
+- Ensure that the **Security Group** for your instance allows inbound traffic on:
+  - **Port 8501** for Streamlit (default port)
+  - **Port 22** for SSH (to access the instance remotely)
+  
+### 2. SSH into your EC2 instance:
+
+After launching the instance, you can SSH into your EC2 instance using the following command:
+
+```bash
+ssh -i your-key.pem ubuntu@your-ec2-public-ip
+
+### 3. Install necessary dependencies on EC2:
+
+To prepare your EC2 instance, update the system and install the required dependencies:
+
+```bash
+# Update the package list and upgrade existing packages
+sudo apt update
+sudo apt upgrade -y
+
+# Install pip for Python 3
+sudo apt install python3-pip -y
+
+# Install Python virtual environment
+sudo apt install python3-venv -y
+
+### 4. Install Python and pip (if not already installed):
+
+If Python and pip are not already installed on your EC2 instance, you can install them using the following command:
+
+```bash
+# Install Python3 pip and other development libraries
+sudo apt install python3-pip python3-dev -y
+
+### 5. Install Streamlit and other required libraries:
+
+Now, install the necessary Python libraries including Streamlit, pandas, seaborn, matplotlib, and plotly by running the following command:
+
+```bash
+# Install the necessary Python libraries
+pip install streamlit pandas seaborn matplotlib plotly
+
+### 6. Clone the repository:
+
+Clone your project repository from GitHub to the EC2 instance using the following command:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/audible-book-recommendations.git
+
+# Navigate into the project directory
+cd audible-book-recommendations
+
+### 7. Running the Application
+
+#### Activate the virtual environment:
+
+Before running the application, make sure to activate the virtual environment:
+
+```bash
+# Activate the virtual environment
+source myenv/bin/activate
 
 
+
+#### Run the Streamlit app:
+
+To run the Streamlit application on port 8501, use the following command:
+
+```bash
+# Run the Streamlit app
+streamlit run app.py --server.port=8501
+
+#### (Optional) Run the app in the background using `nohup`:
+
+If you want the app to continue running even after you close the terminal, use the following command to run the Streamlit app in the background:
+
+```bash
+# Run Streamlit app in the background
+nohup streamlit run app.py --server.port=8501 &
+
+### Accessing the Application
+
+1. **Find the EC2 Public IP:**
+   - You can find the public IP of your EC2 instance in the **AWS EC2 Dashboard**.
+
+2. **Open the application in your browser:**
+   - Use the following URL to access your Streamlit application:
+
+   ```bash
+   http://<EC2_PUBLIC_IP>:8501
+
+### Accessing the Application
+
+1. **Find the EC2 Public IP:**
+   - You can find the public IP of your EC2 instance in the **AWS EC2 Dashboard**.
+
+2. **Open the application in your browser:**
+   - Use the following URL to access your Streamlit application:
+
+   ```bash
+   http://51.20.135.71:8501
+
+## Notes on Hosting
+
+1. **EC2 Instance:**
+   - For light workloads, you can use a `t2.micro` EC2 instance. Make sure the instance has enough resources for running the model and Streamlit app.
+
+2. **Security Groups:**
+   - Ensure your EC2 instance's security group allows inbound traffic on port `8501` (for Streamlit) and port `22` (for SSH).
+
+3. **Persistence:**
+   - Use `nohup` or `screen` to keep the app running in the background, even if you disconnect from the SSH session.
+
+---
+
+## Troubleshooting
+
+1. **Port already in use:**
+   - If port `8501` is already in use, you can either:
+     - Kill the existing Streamlit process using:
+     
+       ```bash
+       kill <PID>
+       ```
+     
+     - Or change the port number in the command:
+     
+       ```bash
+       streamlit run app.py --server.port=8502
+       ```
+
+2. **Security Group Issues:**
+   - Ensure the security group allows traffic on port `8501` for the Streamlit app and port `22` for SSH.
 
 
