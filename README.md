@@ -93,7 +93,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Screenshots/Images:** Add your images to a folder named `images` in your repository, and reference them like:
  - **Screenshots/Images:** Add your images to a folder named `images` in your repository, and reference them like:
-  - `![Home Page](https://raw.githubusercontent.com/priyanka7411/audible-book-recommendations/main/images/screencapture-localhost-8502-2025-02-17-13_17_51.png)` (for the home page)
+  - `![Home Page](screencapture-localhost-8502-2025-02-17-13_17_51.png)` (for the home page)
 
   - `![FAQ Section](https://raw.githubusercontent.com/priyanka7411/audible-book-recommendations/main/images/screencapture-localhost-8502-2025-02-17-13_18_33.png)` (for the FAQ section)
 
