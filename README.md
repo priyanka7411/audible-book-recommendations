@@ -92,7 +92,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ### Notes:
 
 - **Screenshots/Images:** Add your images to a folder named `images` in your repository, and reference them like:
-  - `![Home Page](https://github.com/priyanka7411/audible-book-recommendations/blob/main/images/screencapture-localhost-8502-2025-02-17-13_17_51.png)` (for the home page)
+  - `![Home Page](images/screencapture-localhost-8502-2025-02-17-13_17_51.png)` (for the home page)
   - `![FAQ Section](images/faq_section.png)` (for the FAQ section)
   - `![Detailed FAQ Section](images/detailed_faq_section.png)` (for the detailed FAQ section)
   - `![Recommendation System](images/recommendation_system.png)` (for the recommendation system)
