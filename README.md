@@ -95,7 +95,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
   - `![Home Page](images/screencapture-localhost-8502-2025-02-17-13_17_51.png)` (for the home page)
   - `![FAQ Section](https://github.com/priyanka7411/audible-book-recommendations/blob/main/images/screencapture-localhost-8502-2025-02-17-13_18_33.png)` (for the FAQ section)
   - `![Detailed FAQ Section](https://github.com/priyanka7411/audible-book-recommendations/blob/main/images/screencapture-localhost-8502-2025-02-17-13_19_00.png)` (for the detailed FAQ section)
-  - `![Recommendation System]()` (for the recommendation system)
+  - `![Recommendation System](https://github.com/priyanka7411/audible-book-recommendations/blob/main/images/screencapture-localhost-8502-2025-02-17-13_19_17.png)` (for the recommendation system)
 
 ### Additional Notes on AWS Hosting:
 - For **EC2**, you can choose the instance type based on your project requirements. For light workloads, a `t2.micro` instance may be sufficient, especially if you plan to run only the recommendation model and a Jupyter Notebook.
