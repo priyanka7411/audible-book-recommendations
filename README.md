@@ -91,8 +91,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ### Notes:
 
-- **Screenshots/Images:** Add your images to a folder named `images` in your repository, and reference them like `![Image Description](images/image_name.png)`.
-- Replace `"images/example_screenshot.png"` and `"images/project_screenshot.png"` with the actual image file names you want to include.
+- **Screenshots/Images:** Add your images to a folder named `images` in your repository, and reference them like:
+  - `![Home Page](images/home_page.png)` (for the home page)
+  - `![FAQ Section](images/faq_section.png)` (for the FAQ section)
+  - `![Detailed FAQ Section](images/detailed_faq_section.png)` (for the detailed FAQ section)
+  - `![Recommendation System](images/recommendation_system.png)` (for the recommendation system)
 
 ### Additional Notes on AWS Hosting:
 - For **EC2**, you can choose the instance type based on your project requirements. For light workloads, a `t2.micro` instance may be sufficient, especially if you plan to run only the recommendation model and a Jupyter Notebook.
