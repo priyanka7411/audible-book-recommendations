@@ -34,18 +34,18 @@ st.markdown("""
 # Cache loading models and data to avoid reloading every time
 @st.cache_data
 def load_data():
-    return pd.read_csv("/Users/priyankamalavade/Desktop/Book_recommendation_system_mini_project/data/books_with_clusters.csv")
+    return pd.read_csv("/home/ubuntu/audible-book-recommendations/data/books_with_clusters.csv")
 
 @st.cache_resource
 def load_cosine_sim_model():
-    with open("/Users/priyankamalavade/Desktop/Book_recommendation_system_mini_project/models/cosine_similarity_matrix.pkl", "rb") as file:
+    with open("/home/ubuntu/audible-book-recommendations/models/cosine_similarity_matrix.pkl", "rb") as file:
         return pickle.load(file)
+
 
 @st.cache_resource
 def load_kmeans_model():
-    with open("/Users/priyankamalavade/Desktop/Book_recommendation_system_mini_project/models/kmeans_clustering_model.pkl", "rb") as file:
+    with open("/home/ubuntu/audible-book-recommendations/models/kmeans_clustering_model.pkl", "rb") as file:
         return pickle.load(file)
-
 # Load dataset and models
 merged_df = load_data()
 cosine_sim_model = load_cosine_sim_model()
