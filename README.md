@@ -89,17 +89,6 @@ Feel free to fork the project, open issues, and submit pull requests. All contri
 ### License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-### Notes:
-
-- **Screenshots/Images:** Add your images to a folder named `images` in your repository, and reference them like:
- - **Screenshots/Images:** Add your images to a folder named `images` in your repository, and reference them like:
-  - `![Home Page](screencapture-localhost-8502-2025-02-17-13_17_51.png)` (for the home page)
-
-  - `![FAQ Section](https://raw.githubusercontent.com/priyanka7411/audible-book-recommendations/main/images/screencapture-localhost-8502-2025-02-17-13_18_33.png)` (for the FAQ section)
-
-  - `![Detailed FAQ Section](https://raw.githubusercontent.com/priyanka7411/audible-book-recommendations/main/images/screencapture-localhost-8502-2025-02-17-13_19_00.png)` (for the detailed FAQ section)
-
-  - `![Recommendation System](https://raw.githubusercontent.com/priyanka7411/audible-book-recommendations/main/images/screencapture-localhost-8502-2025-02-17-13_19_17.png)` (for the recommendation system)
 
 
 
