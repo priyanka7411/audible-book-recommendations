@@ -1,228 +1,305 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 import plotly.express as px
-import pickle
-from PIL import Image
+import joblib
 
-# Custom CSS for background and text styling
-st.markdown("""
-    <style>
-        .main {
-            background-color: #f4f4f9;
-            color: #333333;
-        }
-        .css-18e3th9 {
-            background-color: #2E3B4E;
-        }
-        .sidebar .sidebar-content {
-            background-color: #2E3B4E;
-            color: white;
-        }
-        .css-1v0mbd3 {
-            background-color: #2E3B4E;
-            color: white;
-        }
-        .css-2trqyj {
-            background-color: #2E3B4E;
-            color: white;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# --- Sidebar Navigation ---
+st.sidebar.title("📚 Navigation")
+page = st.sidebar.radio("Go to", ["🏠 Home", "📊 EDA", "🤖 Recommendation System"])
 
-# Cache loading models and data to avoid reloading every time
-@st.cache_data
-def load_data():
-    return pd.read_csv("/home/ubuntu/audible-book-recommendations/data/books_with_clusters.csv")
+# --- Load Dataset ---
+df = pd.read_csv("cleaned_book_data_with_clusters.csv")
 
-@st.cache_resource
-def load_cosine_sim_model():
-    with open("/home/ubuntu/audible-book-recommendations/models/cosine_similarity_matrix.pkl", "rb") as file:
-        return pickle.load(file)
+# =================== HOME PAGE ===================
+if page == "🏠 Home":
+    st.title("📘 Audible Insights – Smart Audiobook Recommender")
 
-
-@st.cache_resource
-def load_kmeans_model():
-    with open("/home/ubuntu/audible-book-recommendations/models/kmeans_clustering_model.pkl", "rb") as file:
-        return pickle.load(file)
-# Load dataset and models
-merged_df = load_data()
-cosine_sim_model = load_cosine_sim_model()
-kmeans_model = load_kmeans_model()
-
-# Content-based recommendations for books within the selected genre
-def recommend_books_by_content_in_genre(df, cosine_sim, genre, num_recs=5):
-    genre_df = df[df['Genre'] == genre]
-    if genre_df.empty:
-        return []
-
-    genre_idx = genre_df.index.to_list()
-    cosine_sim_genre = cosine_sim[genre_idx][:, genre_idx]
-
-    similar_books = list(enumerate(cosine_sim_genre[0]))
-    sorted_books = sorted(similar_books, key=lambda x: x[1], reverse=True)[1:num_recs+1]
-    recommendations = [
-        (genre_df.iloc[i[0]]['Book Name'], genre_df.iloc[i[0]]['Rating'], genre_df.iloc[i[0]]['Number of Reviews'], genre_df.iloc[i[0]]['cleaned_description'], genre_df.iloc[i[0]]['Price'])
-        for i in sorted_books
-    ]
-    return recommendations
-
-# Clustering-based recommendations for books within the selected genre
-def recommend_books_by_cluster_in_genre(df, genre, kmeans_model, num_recs=5):
-    genre_df = df[df['Genre'] == genre]
-    if genre_df.empty:
-        return []
-
-    book_cluster = genre_df['cluster'].mode()[0]
-    cluster_books = genre_df[genre_df['cluster'] == book_cluster][['Book Name', 'Rating', 'Number of Reviews', 'cleaned_description', 'Price']].head(num_recs).values.tolist()
-    return cluster_books
-
-# Truncate long descriptions
-def truncate_description(description, max_length=200):
-    return description[:max_length] + '...' if len(description) > max_length else description
-
-def intro_page():
-    st.title("📚 Welcome to the Book Recommendation System!")
-    
-    # Add an image banner to make the page more engaging
-    st.image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMLDATZl5JIOFBoENdkV2E7sN5a-wZepqPR034qJGmvf-ZrLtT__2rnaaCailIvbJORd0&usqp=CAU", use_container_width=True)
-    
-    # Section to describe the purpose of the app
     st.markdown("""
-        Welcome to our **Book Recommendation System**, where you can explore and discover new books tailored to your interests. Whether you're a fan of fiction, non-fiction, or self-improvement, our system helps you find the perfect book for every mood and need.
+    Welcome to **Audible Insights**! 🎧  
+    Discover your next favorite audiobook with personalized recommendations tailored to your taste.
+    """)
 
-        **What can you do here?**
-        - 📊 **Explore the Dataset** with **Exploratory Data Analysis (EDA)**: Dive deep into the data and uncover trends like the most popular genres, highly-rated authors, and more.
-        - 🔍 **Get Personalized Book Recommendations**: Use advanced **Content-Based** and **Clustering-Based** models to receive tailored book suggestions based on your genre preferences.
+    st.markdown("---")
 
-        🚀 **How it works:**
-        - The system analyzes book features such as ratings, reviews, genres, and descriptions to provide personalized recommendations.
-        - **Content-Based** recommendations use book similarity (based on descriptions) to suggest new books within your preferred genres.
-        - **Clustering-Based** recommendations group books by similarities in content, providing insights into hidden gems or popular books in your chosen genre.
+    st.markdown("""
+    ### 🔍 What You Can Do:
+    - **Get Smart Recommendations** based on your favorite books or genres  
+    - **Explore Visual Insights** into audiobook trends, ratings, and more  
+    - **Download Your Recommendations** to keep or share  
+    """)
 
-        🔧 **Tools at Your Disposal**:
-        - **Interactive Plots**: Visualize the book trends with interactive charts and graphs.
-        - **Customizable Recommendations**: Choose the number of recommendations and the genre that interests you.
+    st.markdown("""
+    ### 🛠️ How It Works:
+    1. **Choose a Recommendation Type**  
+    2. **Apply Filters**  
+    3. **Explore Recommendations & Visual Insights**
+    """)
 
-        **Use the sidebar to navigate** between different sections and get started on your book discovery journey! ✨
-    """, unsafe_allow_html=True)
+    st.image("https://www.papillion.org/ImageRepository/Document?documentID=12421", use_container_width=True)
 
-    
+# =================== EDA PAGE ==================
+elif page == "📊 EDA":
+    st.title("📊 Exploratory Data Analysis (EDA)")
+    tab1, tab2, tab3 = st.tabs(["🔍 Overview", "📈 Visualizations", "❓ Q&A Insights"])
 
-# EDA FAQ Page with Amazon-like FAQ Collapsible Section and Visual Enhancements
-def eda_faq_page():
-    st.title("📊 EDA - Frequently Asked Questions (FAQs)")
+    # ======================== OVERVIEW TAB ========================
+    with tab1:
+        st.subheader("📄 Dataset Preview")
+        st.dataframe(df.head())
 
-    faq_questions = {
-        "What are the most popular genres in the dataset?": "📚 Most Popular Genres",
-        "Which authors have the highest-rated books?": "👨‍💻 Highest-Rated Authors",
-        "What is the average rating distribution across books?": "📈 Average Rating Distribution",
-        "How do ratings vary between books with different review counts?": "⭐ Ratings vs. Review Counts",
-        "Which books are frequently clustered together based on descriptions?": "📚 Frequently Clustered Books",
-        "How does genre similarity affect book recommendations?": "📊 Genre Similarity and Recommendations",
-        "What is the effect of author popularity on book ratings?": "👨‍💻 Effect of Author Popularity on Book Ratings",
-        "Which combination of features provides the most accurate recommendations?": "📊 Feature Combinations and Recommendations",
-        "Identify books that are highly rated but have low popularity to recommend hidden gems.": "💎 Hidden Gems"
-    }
+        st.subheader("📊 Basic Statistics")
+        st.write(df.describe())
 
-    for question, header in faq_questions.items():
-        with st.expander(question):
-            if header == "📚 Most Popular Genres":
-                genre_count = merged_df['Genre'].value_counts().head(10)
-                fig = px.bar(genre_count, x=genre_count.index, y=genre_count.values, labels={'y': 'Book Count', 'index': 'Genres'},
-                             title='Top 10 Most Popular Genres', color=genre_count.index, color_continuous_scale='Blues')
-                st.plotly_chart(fig)
+        st.subheader("❗ Missing Values")
+        st.write(df.isnull().sum())
 
-            elif header == "👨‍💻 Highest-Rated Authors":
-                top_authors = merged_df.groupby('Author').agg({'Rating': 'mean', 'Book Name': 'count'}).reset_index()
-                top_authors = top_authors[top_authors['Book Name'] > 1].sort_values('Rating', ascending=False).head(10)
-                fig = px.bar(top_authors, x='Author', y='Rating', color='Rating', title="Top 10 Authors by Average Rating",
-                             labels={'Rating': 'Average Rating'}, color_continuous_scale='Viridis')
-                st.plotly_chart(fig)
+    # ===================== VISUALIZATIONS TAB =====================
+    with tab2:
+        st.subheader("🎯 Rating Distribution Across Genres")
+        fig1 = px.box(df, x="Genre", y="Rating", color="Genre", title="Rating Distribution by Genre")
+        fig1.update_layout(xaxis={'categoryorder': 'total descending'})
+        st.plotly_chart(fig1, use_container_width=True, key="viz_rating_genre")
 
-            elif header == "📈 Average Rating Distribution":
-                fig, ax = plt.subplots()
-                sns.histplot(merged_df['Rating'], kde=True, ax=ax)
-                ax.set_title('Distribution of Ratings')
-                st.pyplot(fig)
+        st.subheader("📚 Most Common Genres")
+        genre_counts = df['Genre'].value_counts().reset_index()
+        genre_counts.columns = ['Genre', 'Count']
+        fig2 = px.bar(genre_counts.head(10), x='Genre', y='Count', color='Genre')
+        st.plotly_chart(fig2, use_container_width=True, key="viz_genre_counts")
 
-            elif header == "⭐ Ratings vs. Review Counts":
-                fig, ax = plt.subplots()
-                sns.scatterplot(data=merged_df, x='Number of Reviews', y='Rating', ax=ax)
-                ax.set_title('Ratings vs. Review Counts')
-                st.pyplot(fig)
+        st.subheader("✍️ Top Authors by Book Count")
+        top_authors = df['Author'].value_counts().reset_index().head(10)
+        top_authors.columns = ['Author', 'Count']
+        fig3 = px.bar(top_authors, x='Author', y='Count', color='Author')
+        st.plotly_chart(fig3, use_container_width=True, key="viz_top_authors")
 
-            elif header == "📚 Frequently Clustered Books":
-                cluster_count = merged_df['cluster'].value_counts().head(5)
-                st.write("Top 5 Clusters by Book Count:")
-                st.dataframe(cluster_count)
+        st.subheader("🔄 Ratings vs Number of Reviews")
+        fig4 = px.scatter(df, x='Number of Reviews', y='Rating', color='Genre',
+                          size='Rating', hover_data=['Book Name', 'Author'])
+        fig4.update_layout(xaxis_type="log")
+        st.plotly_chart(fig4, use_container_width=True, key="viz_reviews_vs_ratings")
 
-            elif header == "📊 Genre Similarity and Recommendations":
-                st.markdown("""
-                Genre similarity plays a crucial role in content-based recommendations by grouping books with similar themes, topics, and styles. Books from the same genre tend to have higher cosine similarity scores, leading to stronger recommendations within the genre.
-                """)
+        st.subheader("🎧 Listening Time Distribution")
+        fig5 = px.histogram(df, x='Listening Time (minutes)', nbins=30, color='Genre')
+        st.plotly_chart(fig5, use_container_width=True, key="viz_listening_time")
 
-            elif header == "👨‍💻 Effect of Author Popularity on Book Ratings":
-                author_popularity = merged_df.groupby('Author').agg({'Rating': 'mean', 'Number of Reviews': 'sum'}).reset_index()
-                fig = px.scatter(author_popularity, x='Number of Reviews', y='Rating', hover_data=['Author'],
-                                 title='Author Popularity vs. Ratings')
-                st.plotly_chart(fig)
+        st.subheader("💰 Price vs Rating")
+        fig6 = px.scatter(df, x='Price', y='Rating', color='Genre', size='Rating',
+                          hover_data=['Book Name', 'Author'])
+        fig6.update_layout(xaxis_type="log")
+        st.plotly_chart(fig6, use_container_width=True, key="viz_price_vs_rating")
 
-            elif header == "📊 Feature Combinations and Recommendations":
-                st.markdown("""
-                Feature combinations such as Genre, Ratings, Review Counts, and Author Popularity can help fine-tune recommendations. By combining these features, we can better understand user preferences and optimize recommendations.
-                """)
+        st.subheader("📈 Rating vs Rank")
+        fig7 = px.scatter(df, x='Rank', y='Rating', color='Genre',
+                          hover_data=['Book Name', 'Author'])
+        st.plotly_chart(fig7, use_container_width=True, key="viz_rating_vs_rank")
 
-            elif header == "💎 Hidden Gems":
-                hidden_gems = merged_df[(merged_df['Rating'] >= 4.5) & (merged_df['Number of Reviews'] < 100)]
-                st.dataframe(hidden_gems[['Book Name', 'Rating', 'Number of Reviews']])
+        st.subheader("🕒 Average Listening Time by Genre")
+        avg_time = df.groupby('Genre')['Listening Time (minutes)'].mean().sort_values(ascending=False).reset_index()
+        fig8 = px.bar(avg_time.head(10), x='Genre', y='Listening Time (minutes)', color='Genre')
+        st.plotly_chart(fig8, use_container_width=True, key="viz_avg_listening_time")
 
-# Recommendation System Page with Cards Layout and Interactive Widgets
-def rec_system_page():
-    st.title("🔍 Book Recommendation System")
+        st.subheader("🔥 Correlation Heatmap")
+        corr_df = df[['Rating', 'Number of Reviews', 'Price', 'Listening Time (minutes)', 'Rank']]
+        corr_matrix = corr_df.corr()
+        fig9 = px.imshow(corr_matrix, text_auto=True, color_continuous_scale='RdBu_r')
+        st.plotly_chart(fig9, use_container_width=True, key="viz_correlation_heatmap")
 
-    st.sidebar.header("Choose Recommendation Method")
-    rec_method = st.sidebar.radio("Choose Method", ["Content-Based", "Clustering-Based"])
+    # ====================== Q&A INSIGHTS TAB ======================
+    with tab3:
+        st.markdown("## ❓ Frequently Asked Questions (FAQ)")
+        st.markdown("Explore insights from the Audible dataset categorized into Easy, Medium, and Scenario-based questions.")
+        st.markdown("---")
 
-    genre = st.selectbox("Choose a Genre", merged_df['Genre'].unique())
-    num_recs = st.slider("Number of Recommendations", 1, 10, 5)
+        # 🟢 EASY LEVEL
+        st.markdown("### 🟢 Easy Level Questions")
 
-    if rec_method == "Content-Based":
-        st.header(f"📚 Content-Based Recommendations for {genre}")
-        recs = recommend_books_by_content_in_genre(merged_df, cosine_sim_model, genre, num_recs)
-        if recs:
-            for rec in recs:
-                st.markdown(f"**Book Name:** {rec[0]}\n\n"
-                            f"**Rating:** {rec[1]}\n\n"
-                            f"**Number of Reviews:** {rec[2]}\n\n"
-                            f"**Price:** {rec[4]}\n\n"
-                            f"**Description:** {truncate_description(rec[3])}\n\n"
-                            "---")
+        st.markdown("#### 📚 1. What are the most popular genres?")
+        fig_e1 = px.bar(genre_counts.head(10), x='Genre', y='Count', color='Genre')
+        st.plotly_chart(fig_e1, use_container_width=True, key="faq_genre_counts")
+
+        st.markdown("#### ✍️ 2. Which authors have the highest-rated books?")
+        top_rated_books = df[['Author', 'Book Name', 'Rating']].sort_values(by='Rating', ascending=False).drop_duplicates('Author').head(10)
+        fig_e2 = px.bar(top_rated_books, x='Author', y='Rating', color='Author', hover_data=['Book Name'])
+        st.plotly_chart(fig_e2, use_container_width=True, key="faq_top_rated_authors")
+
+        st.markdown("#### 📈 3. What is the average rating distribution across books?")
+        fig_e3 = px.histogram(df, x='Rating', nbins=20, color='Genre')
+        st.plotly_chart(fig_e3, use_container_width=True, key="faq_rating_distribution")
+
+        if 'Year' in df.columns:
+            st.markdown("#### 📅 4. Are there trends in publication years for popular books?")
+            yearly_counts = df[df['Rating'] > 4.0].groupby('Year').size().reset_index(name='Count')
+            fig_e4 = px.line(yearly_counts, x='Year', y='Count', title="Popular Books Over Years")
+            st.plotly_chart(fig_e4, use_container_width=True, key="faq_yearly_trends")
+
+        st.markdown("#### 💬 5. How do ratings vary between books with different review counts?")
+        fig_e5 = px.scatter(df, x='Number of Reviews', y='Rating', color='Genre', size='Rating',
+                            hover_data=['Book Name', 'Author'])
+        fig_e5.update_layout(xaxis_type="log")
+        st.plotly_chart(fig_e5, use_container_width=True, key="faq_reviews_vs_ratings")
+
+        st.markdown("---")
+
+        # 🟡 MEDIUM LEVEL
+        st.markdown("### 🟡 Medium Level Questions")
+
+        st.markdown("#### 🔗 6. Which books are frequently clustered together based on descriptions?")
+        cluster_sample = df[['Book Name', 'cluster']].groupby('cluster').apply(lambda x: x.head(3)).reset_index(drop=True)
+        st.dataframe(cluster_sample)
+
+        st.markdown("#### 🔁 7. How does genre similarity affect book recommendations?")
+        st.markdown("Books within the same genre often appear in similar clusters and are recommended together due to shared themes, tone, and listening experience.")
+
+        st.markdown("#### 📊 8. What is the effect of author popularity on book ratings?")
+        author_stats = df.groupby('Author').agg({'Rating': 'mean', 'Book Name': 'count'}).reset_index()
+        author_stats.columns = ['Author', 'Avg Rating', 'Book Count']
+        fig_m1 = px.scatter(author_stats, x='Book Count', y='Avg Rating', size='Avg Rating', color='Avg Rating')
+        st.plotly_chart(fig_m1, use_container_width=True, key="faq_author_popularity")
+
+        st.markdown("#### 🧠 9. Which combination of features provides the most accurate recommendations?")
+        st.markdown("Combining `Genre`, `Listening Time`, `Rating`, and `cleaned_description` (via clustering or embeddings) produces more accurate and personalized recommendations. Hybrid models using both collaborative and content-based filtering perform best.")
+
+        st.markdown("---")
+
+        # 🔴 SCENARIO-BASED
+        st.markdown("### 🔴 Scenario-Based Questions")
+
+        st.markdown("#### 👽 10. A new user likes science fiction books. Which top 5 books should be recommended?")
+        sci_fi_books = df[df['Genre'].str.contains('Science Fiction', case=False, na=False)].sort_values(by='Rating', ascending=False).head(5)
+        st.dataframe(sci_fi_books[['Book Name', 'Author', 'Rating', 'Genre']])
+
+        st.markdown("#### 🔍 11. For a user who has previously rated thrillers highly, recommend similar books.")
+        thriller_books = df[df['Genre'].str.contains('Thriller', case=False, na=False)]
+        similar_thrillers = thriller_books.sort_values(by='Rating', ascending=False).head(5)
+        st.dataframe(similar_thrillers[['Book Name', 'Author', 'Rating', 'Genre']])
+
+        st.markdown("#### 💎 12. Identify books that are highly rated but have low popularity to recommend hidden gems.")
+        hidden_gems = df[(df['Rating'] >= 4.5) & (df['Number of Reviews'] < 100)].sort_values(by='Rating', ascending=False).head(10)
+        st.dataframe(hidden_gems[['Book Name', 'Author', 'Rating', 'Number of Reviews']])
+
+        st.markdown("💡 *These insights help users discover personalized content and optimize the recommendation system!*")
+
+
+# =================== RECOMMENDATION SYSTEM ===================
+elif page == "🤖 Recommendation System":
+    st.title("🔮 Personalized Book Recommendations")
+
+    # Load models
+    try:
+        svd_model = joblib.load("svd_recommender_model.pkl")
+    except Exception as e:
+        st.error(f"Collaborative model couldn't be loaded: {e}")
+        st.stop()
+
+    try:
+        cosine_sim = joblib.load("cosine_sim.pkl")
+    except Exception as e:
+        st.warning("Content-based model not found.")
+        cosine_sim = None
+
+    try:
+        tfidf_vectorizer = joblib.load("tfidf_vectorizer.pkl")
+    except Exception as e:
+        st.warning("TF-IDF vectorizer not found.")
+        tfidf_vectorizer = None
+
+    try:
+        kmeans_model = joblib.load("kmeans_model.pkl")
+    except Exception as e:
+        st.warning("Clustering model not found.")
+        kmeans_model = None
+
+    # Recommendation Type
+    approach = st.radio("🧠 Choose Recommendation Type:", ["Content-Based", "Clustering-Based", "Hybrid"])
+
+    # User Filters
+    st.markdown("### 🎯 Choose Your Preferences")
+    selected_genres = st.multiselect("📚 Preferred Genres", sorted(df['Genre'].unique()))
+    selected_authors = st.multiselect("✍️ Preferred Authors", sorted(df['Author'].unique()))
+
+    min_rating = st.slider("⭐ Minimum Rating", min_value=0.0, max_value=5.0, step=0.1, value=4.0)
+    min_reviews = st.slider("💬 Minimum Number of Reviews", min_value=0, max_value=5000, step=100, value=100)
+
+    filtered_df = df.copy()
+    if selected_genres:
+        filtered_df = filtered_df[filtered_df['Genre'].isin(selected_genres)]
+    if selected_authors:
+        filtered_df = filtered_df[filtered_df['Author'].isin(selected_authors)]
+    filtered_df = filtered_df[
+        (filtered_df['Rating'] >= min_rating) & 
+        (filtered_df['Number of Reviews'] >= min_reviews)
+    ]
+
+    if filtered_df.empty:
+        st.warning("No books found. Try adjusting filters.")
+        st.stop()
+
+    book_list = sorted(filtered_df["Book Name"].unique())
+    selected_book = st.selectbox("📖 Choose a book you like", book_list)
+    top_n = 5
+
+    if st.button("✨ Show Recommendations"):
+        recommended = pd.DataFrame()
+
+        if approach == "Content-Based":
+            if cosine_sim is None:
+                st.error("Model not loaded.")
+                st.stop()
+            indices = pd.Series(df.index, index=df["Book Name"]).drop_duplicates()
+            if selected_book not in indices:
+                st.error("Selected book not found in the dataset.")
+                st.stop()
+            idx = indices[selected_book]
+            sim_scores = sorted(list(enumerate(cosine_sim[idx])), key=lambda x: x[1], reverse=True)[1:top_n+1]
+            book_indices = [i[0] for i in sim_scores]
+            recommended = df.iloc[book_indices]
+
+        elif approach == "Clustering-Based":
+            cluster_id = df[df["Book Name"] == selected_book]["cluster"].values[0]
+            cluster_books = df[(df["cluster"] == cluster_id) & (df["Book Name"] != selected_book)]
+            cluster_size = len(cluster_books)
+            st.info(f"🔍 Found {cluster_size} similar books in the same cluster.")
+            recommended = cluster_books.sample(min(top_n, cluster_size))
+
+        elif approach == "Hybrid":
+            dummy_user_id = 9999
+            predictions = []
+            for book in df[df["Book Name"] != selected_book]["Book Name"].unique():
+                try:
+                    est_rating = svd_model.predict(dummy_user_id, book).est
+                    content_score = 0
+                    if cosine_sim is not None:
+                        idx = df[df["Book Name"] == selected_book].index[0]
+                        sim_idx = df[df["Book Name"] == book].index[0]
+                        content_score = cosine_sim[idx][sim_idx]
+                    hybrid_score = 0.7 * est_rating + 0.3 * content_score
+                    predictions.append((book, hybrid_score))
+                except:
+                    continue
+            pred_df = pd.DataFrame(predictions, columns=["Book Name", "Hybrid Score"])
+            recommended = pred_df.merge(df, on="Book Name", how="left").sort_values("Hybrid Score", ascending=False).head(top_n)
+
+        # Display Recommendations
+        st.markdown("### 📚 Recommended Books")
+        if recommended.empty:
+            st.warning("No recommendations found. Try changing filters.")
         else:
-            st.warning(f"No recommendations found for {genre}.")
-    
-    elif rec_method == "Clustering-Based":
-        st.header(f"📊 Clustering-Based Recommendations for {genre}")
-        recs = recommend_books_by_cluster_in_genre(merged_df, genre, kmeans_model, num_recs)
-        if recs:
-            for rec in recs:
-                st.markdown(f"**Book Name:** {rec[0]}\n\n"
-                            f"**Rating:** {rec[1]}\n\n"
-                            f"**Number of Reviews:** {rec[2]}\n\n"
-                            f"**Price:** {rec[4]}\n\n"
-                            f"**Description:** {truncate_description(rec[3])}\n\n"
-                            "---")
-        else:
-            st.warning(f"No recommendations found for {genre}.")
+            for _, row in recommended.iterrows():
+                with st.container():
+                    col1, col2 = st.columns([1, 3])
+                    with col1:
+                        st.image("https://img.icons8.com/ios-filled/100/book.png", width=80)
+                    with col2:
+                        st.markdown(f"**📖 {row['Book Name']}**")
+                        st.markdown(f"👤 Author: `{row['Author']}`")
+                        st.markdown(f"🎧 Genre: `{row['Genre']}` | ⏱️ Listening Time: `{int(row['Listening Time (minutes)'])} mins`")
+                        st.markdown(f"⭐ Rating: `{row['Rating']}` | 💬 Reviews: `{row['Number of Reviews']}`")
 
-# Sidebar menu
-menu = st.sidebar.selectbox("Menu", ["Introduction", "EDA FAQ", "Recommendation System"])
-
-# Display selected page
-if menu == "Introduction":
-    intro_page()
-elif menu == "EDA FAQ":
-    eda_faq_page()
-elif menu == "Recommendation System":
-    rec_system_page()
+            # ✅ Download Button
+            csv = recommended.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="⬇️ Download Recommendations as CSV",
+                data=csv,
+                file_name="recommended_books.csv",
+                mime="text/csv",
+            )
